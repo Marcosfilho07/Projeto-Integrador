@@ -1,13 +1,5 @@
 "use client"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Trash2, Trophy } from "lucide-react"
 import type { Participant } from "@/lib/types"
@@ -31,35 +23,36 @@ export function ParticipantsTable({ participants, onRemove }: ParticipantsTableP
 
   return (
     <div className="rounded-lg border border-border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-border hover:bg-transparent">
-            <TableHead className="text-muted-foreground font-semibold w-12">#</TableHead>
-            <TableHead className="text-muted-foreground font-semibold">Nome</TableHead>
-            <TableHead className="text-muted-foreground font-semibold">Idade</TableHead>
-            <TableHead className="text-muted-foreground font-semibold">Tempo</TableHead>
-            <TableHead className="text-muted-foreground font-semibold w-12">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-border bg-secondary/50">
+            <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground w-12">#</th>
+            <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground">Nome</th>
+            <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground">Idade</th>
+            <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground">Tempo</th>
+            <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground w-12">
               <span className="sr-only">Acoes</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
           {sorted.map((p, i) => (
-            <TableRow key={p.id} className="border-border hover:bg-secondary/50">
-              <TableCell className="font-mono text-sm text-muted-foreground">
+            <tr key={p.id} className="border-b border-border last:border-b-0 hover:bg-secondary/30 transition-colors">
+              <td className="px-3 py-2.5 font-mono text-sm text-muted-foreground">
                 {i === 0 && sorted.length > 1 ? (
-                  <Trophy className="h-4 w-4 text-accent" />
+                  <Trophy className="h-4 w-4 text-accent" aria-label="Primeiro lugar" />
                 ) : (
                   i + 1
                 )}
-              </TableCell>
-              <TableCell className="font-medium text-foreground">{p.name}</TableCell>
-              <TableCell className="text-foreground">{p.age} anos</TableCell>
-              <TableCell className="font-mono text-sm text-primary font-semibold">
+              </td>
+              <td className="px-3 py-2.5 font-medium text-foreground">{p.name}</td>
+              <td className="px-3 py-2.5 text-foreground">{p.age} anos</td>
+              <td className="px-3 py-2.5 font-mono text-sm text-primary font-semibold">
                 {formatTime(p.time)}
-              </TableCell>
-              <TableCell>
+              </td>
+              <td className="px-3 py-2.5">
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   onClick={() => onRemove(p.id)}
@@ -68,11 +61,11 @@ export function ParticipantsTable({ participants, onRemove }: ParticipantsTableP
                   <Trash2 className="h-3.5 w-3.5" />
                   <span className="sr-only">Remover</span>
                 </Button>
-              </TableCell>
-            </TableRow>
+              </td>
+            </tr>
           ))}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
     </div>
   )
 }

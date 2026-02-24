@@ -19,7 +19,7 @@ export function ParticipantForm({ activity, capturedTime, onAdd, onClearTime }: 
   const [age, setAge] = useState("")
   const [manualTime, setManualTime] = useState("")
 
-  const effectiveTime = capturedTime ?? (manualTime ? parseFloat(manualTime) : null)
+  const effectiveTime = capturedTime !== null ? capturedTime : (manualTime ? parseFloat(manualTime) : null)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -39,6 +39,8 @@ export function ParticipantForm({ activity, capturedTime, onAdd, onClearTime }: 
     setManualTime("")
     onClearTime()
   }
+
+  const isValid = name.trim() && age && effectiveTime !== null && effectiveTime > 0
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -78,7 +80,7 @@ export function ParticipantForm({ activity, capturedTime, onAdd, onClearTime }: 
         {capturedTime !== null ? (
           <div className="flex items-center gap-2">
             <div className="flex-1 rounded-md bg-primary/10 border border-primary/30 px-3 py-2 font-mono text-sm text-primary">
-              {capturedTime.toFixed(2)}s (capturado)
+              {capturedTime.toFixed(2)}s (capturado do temporizador)
             </div>
             <Button
               type="button"
@@ -96,7 +98,7 @@ export function ParticipantForm({ activity, capturedTime, onAdd, onClearTime }: 
             type="number"
             step="0.01"
             min={0.01}
-            placeholder="Ou digite manualmente"
+            placeholder="Ou digite manualmente em segundos"
             value={manualTime}
             onChange={(e) => setManualTime(e.target.value)}
             className="bg-secondary border-border text-foreground placeholder:text-muted-foreground"
@@ -105,7 +107,7 @@ export function ParticipantForm({ activity, capturedTime, onAdd, onClearTime }: 
       </div>
       <Button
         type="submit"
-        disabled={!name.trim() || !age || effectiveTime === null || effectiveTime <= 0}
+        disabled={!isValid}
         className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 mt-2"
       >
         <UserPlus className="h-4 w-4" />

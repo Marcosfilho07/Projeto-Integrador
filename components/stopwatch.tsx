@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Play, Pause, RotateCcw } from "lucide-react"
+import { Play, Pause, RotateCcw, Timer } from "lucide-react"
 import { formatTime } from "@/lib/types"
 
 interface StopwatchProps {
@@ -16,35 +16,36 @@ export function Stopwatch({ onTimeCapture }: StopwatchProps) {
   const startTimeRef = useRef<number>(0)
   const accumulatedRef = useRef<number>(0)
 
-  const start = useCallback(() => {
-    if (isRunning) return
-    setIsRunning(true)
-    startTimeRef.current = Date.now()
-    intervalRef.current = setInterval(() => {
-      const elapsed = (Date.now() - startTimeRef.current) / 1000
-      setTime(accumulatedRef.current + elapsed)
-    }, 10)
-  }, [isRunning])
-
-  const pause = useCallback(() => {
-    if (!isRunning) return
-    setIsRunning(false)
-    accumulatedRef.current += (Date.now() - startTimeRef.current) / 1000
-    if (intervalRef.current) {
+  const stopInterval = useCallback(() => {
+    if (intervalRef.current !== null) {
       clearInterval(intervalRef.current)
       intervalRef.current = null
     }
-  }, [isRunning])
+  }, [])
+
+  const start = useCallback(() => {
+    setIsRunning(true)
+    startTimeRef.current = Date.now()
+    stopInterval()
+    intervalRef.current = setInterval(() => {
+      const elapsed = (Date.now() - startTimeRef.current) / 1000
+      setTime(accumulatedRef.current + elapsed)
+    }, 50)
+  }, [stopInterval])
+
+  const pause = useCallback(() => {
+    setIsRunning(false)
+    accumulatedRef.current += (Date.now() - startTimeRef.current) / 1000
+    setTime(accumulatedRef.current)
+    stopInterval()
+  }, [stopInterval])
 
   const reset = useCallback(() => {
     setIsRunning(false)
     setTime(0)
     accumulatedRef.current = 0
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
-  }, [])
+    stopInterval()
+  }, [stopInterval])
 
   const capture = useCallback(() => {
     if (time > 0) {
@@ -52,62 +53,98 @@ export function Stopwatch({ onTimeCapture }: StopwatchProps) {
     }
   }, [time, onTimeCapture])
 
+  useEffect(() => {
+    return () => stopInterval()
+  }, [stopInterval])
+
+  const progress = Math.min((time % 60) / 60, 1)
+  const circumference = 2 * Math.PI * 90
+  const strokeDashoffset = circumference - progress * circumference
+
   return (
-    <div className="flex flex-col items-center gap-6">
-      <div className="relative">
-        <div className="w-52 h-52 rounded-full border-4 border-primary/30 flex items-center justify-center relative">
-          <div
-            className="absolute inset-1 rounded-full"
-            style={{
-              background: isRunning
-                ? "conic-gradient(oklch(0.65 0.2 145) calc(var(--progress) * 1%), oklch(0.25 0.01 260) 0)"
-                : "oklch(0.22 0.008 260)",
-              ["--progress" as string]: Math.min((time % 60) / 60 * 100, 100),
-            }}
+    <div className="flex flex-col items-center gap-6 py-2">
+      {/* Timer Circle */}
+      <div className="relative w-52 h-52">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 200 200">
+          <circle
+            cx="100"
+            cy="100"
+            r="90"
+            fill="none"
+            stroke="oklch(0.25 0.01 260)"
+            strokeWidth="6"
           />
-          <div className="absolute inset-3 rounded-full bg-card flex items-center justify-center">
-            <span className="font-mono text-3xl font-bold text-foreground tabular-nums tracking-tight">
-              {formatTime(time)}
-            </span>
-          </div>
-        </div>
-        {isRunning && (
-          <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-            <span className="relative inline-flex rounded-full h-4 w-4 bg-primary" />
+          <circle
+            cx="100"
+            cy="100"
+            r="90"
+            fill="none"
+            stroke={isRunning ? "#4ade80" : "#60a5fa"}
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            style={{ transition: "stroke-dashoffset 0.1s linear" }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-mono text-4xl font-bold text-foreground tabular-nums tracking-tight">
+            {formatTime(time)}
           </span>
-        )}
+          {isRunning && (
+            <span className="text-xs text-primary font-medium mt-1 animate-pulse">CRONOMETRANDO</span>
+          )}
+          {!isRunning && time > 0 && (
+            <span className="text-xs text-muted-foreground mt-1">PAUSADO</span>
+          )}
+        </div>
       </div>
+
+      {/* Controls */}
       <div className="flex items-center gap-3">
         {!isRunning ? (
-          <Button onClick={start} size="lg" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button
+            type="button"
+            onClick={start}
+            size="lg"
+            className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             <Play className="h-5 w-5" />
             Iniciar
           </Button>
         ) : (
-          <Button onClick={pause} size="lg" variant="secondary" className="gap-2">
+          <Button
+            type="button"
+            onClick={pause}
+            size="lg"
+            variant="secondary"
+            className="gap-2"
+          >
             <Pause className="h-5 w-5" />
             Pausar
           </Button>
         )}
-        <Button onClick={reset} size="lg" variant="outline" className="gap-2">
+        <Button
+          type="button"
+          onClick={reset}
+          size="lg"
+          variant="outline"
+          className="gap-2"
+        >
           <RotateCcw className="h-4 w-4" />
           Zerar
         </Button>
         <Button
+          type="button"
           onClick={capture}
           size="lg"
           disabled={time === 0}
           className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40"
         >
+          <Timer className="h-4 w-4" />
           Capturar
         </Button>
       </div>
-      {time > 0 && !isRunning && (
-        <p className="text-sm text-muted-foreground">
-          Tempo capturado: <span className="font-mono text-foreground font-semibold">{formatTime(time)}</span>
-        </p>
-      )}
     </div>
   )
 }

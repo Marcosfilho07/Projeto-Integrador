@@ -23,16 +23,10 @@ export default function Home() {
     setParticipants((prev) => prev.filter((p) => p.id !== id))
   }
 
-  const tabs: { value: TabValue; label: string; icon: React.ReactNode }[] = [
-    { value: "labirinto", label: "Labirinto", icon: <Puzzle className="h-4 w-4" /> },
-    { value: "elastico", label: "Elastico", icon: <Circle className="h-4 w-4" /> },
-    { value: "estatisticas", label: "Estatisticas", icon: <BarChart3 className="h-4 w-4" /> },
-  ]
-
   return (
     <main className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-primary flex items-center justify-center">
@@ -43,32 +37,55 @@ export default function Home() {
               <p className="text-xs text-muted-foreground">Registro de Atividades</p>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground font-mono">
-            <span>{participants.length} registros</span>
+          <div className="text-xs text-muted-foreground font-mono">
+            {participants.length} registros
           </div>
         </div>
       </header>
 
       {/* Content */}
       <div className="mx-auto max-w-5xl px-4 py-6 flex flex-col gap-6">
-        {/* Custom Tabs */}
-        <nav className="grid grid-cols-3 rounded-xl bg-secondary border border-border p-1.5 gap-1.5">
-          {tabs.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all cursor-pointer ${
-                activeTab === tab.value
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              {tab.icon}
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          ))}
-        </nav>
+        {/* Tab Navigation */}
+        <div className="flex rounded-xl bg-secondary border border-border p-1.5 gap-1.5">
+          <button
+            type="button"
+            onClick={() => setActiveTab("labirinto")}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+              activeTab === "labirinto"
+                ? "bg-primary text-primary-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <Puzzle className="h-4 w-4" />
+            <span className="hidden sm:inline">Labirinto</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("elastico")}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+              activeTab === "elastico"
+                ? "bg-accent text-accent-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <Circle className="h-4 w-4" />
+            <span className="hidden sm:inline">Elastico</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("estatisticas")}
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+              activeTab === "estatisticas"
+                ? "bg-chart-3 text-foreground shadow-md"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">Estatisticas</span>
+          </button>
+        </div>
 
+        {/* Tab Content */}
         {activeTab === "labirinto" && (
           <ActivityPanel
             activity="labirinto"
@@ -107,7 +124,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Summary Cards */}
             <div className="grid grid-cols-2 gap-4">
               <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-1">
                 <span className="text-xs text-muted-foreground uppercase tracking-wider">Labirinto</span>
