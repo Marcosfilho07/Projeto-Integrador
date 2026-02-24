@@ -1,14 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ActivityPanel } from "@/components/activity-panel"
 import { AgeStatistics } from "@/components/age-statistics"
 import type { Participant } from "@/lib/types"
 import { Puzzle, Circle, BarChart3 } from "lucide-react"
 
+type TabValue = "labirinto" | "elastico" | "estatisticas"
+
 export default function Home() {
   const [participants, setParticipants] = useState<Participant[]>([])
+  const [activeTab, setActiveTab] = useState<TabValue>("labirinto")
 
   const labirintoParticipants = participants.filter((p) => p.activity === "labirinto")
   const elasticoParticipants = participants.filter((p) => p.activity === "elastico")
@@ -20,6 +22,12 @@ export default function Home() {
   function removeParticipant(id: string) {
     setParticipants((prev) => prev.filter((p) => p.id !== id))
   }
+
+  const tabs: { value: TabValue; label: string; icon: React.ReactNode }[] = [
+    { value: "labirinto", label: "Labirinto", icon: <Puzzle className="h-4 w-4" /> },
+    { value: "elastico", label: "Elastico", icon: <Circle className="h-4 w-4" /> },
+    { value: "estatisticas", label: "Estatisticas", icon: <BarChart3 className="h-4 w-4" /> },
+  ]
 
   return (
     <main className="min-h-screen bg-background">
@@ -42,93 +50,85 @@ export default function Home() {
       </header>
 
       {/* Content */}
-      <div className="mx-auto max-w-5xl px-4 py-6">
-        <Tabs defaultValue="labirinto" className="flex flex-col gap-6">
-          <TabsList className="grid w-full grid-cols-3 bg-secondary border border-border h-12">
-            <TabsTrigger
-              value="labirinto"
-              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+      <div className="mx-auto max-w-5xl px-4 py-6 flex flex-col gap-6">
+        {/* Custom Tabs */}
+        <nav className="grid grid-cols-3 rounded-xl bg-secondary border border-border p-1.5 gap-1.5">
+          {tabs.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`flex items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-all cursor-pointer ${
+                activeTab === tab.value
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
             >
-              <Puzzle className="h-4 w-4" />
-              <span className="hidden sm:inline">Labirinto</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="elastico"
-              className="gap-2 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground"
-            >
-              <Circle className="h-4 w-4" />
-              <span className="hidden sm:inline">Elastico</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="estatisticas"
-              className="gap-2 data-[state=active]:bg-chart-3 data-[state=active]:text-foreground"
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Estatisticas</span>
-            </TabsTrigger>
-          </TabsList>
+              {tab.icon}
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          ))}
+        </nav>
 
-          <TabsContent value="labirinto">
-            <ActivityPanel
-              activity="labirinto"
-              title="Labirinto"
-              description="Registre o tempo que cada participante levou para completar o labirinto."
-              participants={labirintoParticipants}
-              onAdd={addParticipant}
-              onRemove={removeParticipant}
-              icon={<Puzzle className="h-5 w-5" />}
-            />
-          </TabsContent>
+        {activeTab === "labirinto" && (
+          <ActivityPanel
+            activity="labirinto"
+            title="Labirinto"
+            description="Registre o tempo que cada participante levou para completar o labirinto."
+            participants={labirintoParticipants}
+            onAdd={addParticipant}
+            onRemove={removeParticipant}
+            icon={<Puzzle className="h-5 w-5" />}
+          />
+        )}
 
-          <TabsContent value="elastico">
-            <ActivityPanel
-              activity="elastico"
-              title="Elastico com Bolinhas"
-              description="Registre o tempo que cada participante levou na brincadeira do elastico com bolinhas."
-              participants={elasticoParticipants}
-              onAdd={addParticipant}
-              onRemove={removeParticipant}
-              icon={<Circle className="h-5 w-5" />}
-            />
-          </TabsContent>
+        {activeTab === "elastico" && (
+          <ActivityPanel
+            activity="elastico"
+            title="Elastico com Bolinhas"
+            description="Registre o tempo que cada participante levou na brincadeira do elastico com bolinhas."
+            participants={elasticoParticipants}
+            onAdd={addParticipant}
+            onRemove={removeParticipant}
+            icon={<Circle className="h-5 w-5" />}
+          />
+        )}
 
-          <TabsContent value="estatisticas">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-chart-3/15 text-chart-3">
-                  <BarChart3 className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-foreground">Estatisticas por Faixa Etaria</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Distribuicao percentual dos participantes por faixa etaria em cada atividade.
-                  </p>
-                </div>
+        {activeTab === "estatisticas" && (
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center h-10 w-10 rounded-lg bg-chart-3/15 text-chart-3">
+                <BarChart3 className="h-5 w-5" />
               </div>
-
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-1">
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider">Labirinto</span>
-                  <span className="text-3xl font-bold font-mono text-primary">{labirintoParticipants.length}</span>
-                  <span className="text-xs text-muted-foreground">participantes</span>
-                </div>
-                <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-1">
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider">Elastico</span>
-                  <span className="text-3xl font-bold font-mono text-accent">{elasticoParticipants.length}</span>
-                  <span className="text-xs text-muted-foreground">participantes</span>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-border bg-card p-6">
-                <AgeStatistics
-                  labirintoParticipants={labirintoParticipants}
-                  elasticoParticipants={elasticoParticipants}
-                />
+              <div>
+                <h2 className="text-xl font-bold text-foreground">Estatisticas por Faixa Etaria</h2>
+                <p className="text-sm text-muted-foreground">
+                  Distribuicao percentual dos participantes por faixa etaria em cada atividade.
+                </p>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground uppercase tracking-wider">Labirinto</span>
+                <span className="text-3xl font-bold font-mono text-primary">{labirintoParticipants.length}</span>
+                <span className="text-xs text-muted-foreground">participantes</span>
+              </div>
+              <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-1">
+                <span className="text-xs text-muted-foreground uppercase tracking-wider">Elastico</span>
+                <span className="text-3xl font-bold font-mono text-accent">{elasticoParticipants.length}</span>
+                <span className="text-xs text-muted-foreground">participantes</span>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-card p-6">
+              <AgeStatistics
+                labirintoParticipants={labirintoParticipants}
+                elasticoParticipants={elasticoParticipants}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </main>
   )
