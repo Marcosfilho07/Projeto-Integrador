@@ -1,26 +1,113 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { ActivityPanel } from "@/components/activity-panel"
 import { AgeStatistics } from "@/components/age-statistics"
 import type { Participant } from "@/lib/types"
-import { Puzzle, Circle, BarChart3 } from "lucide-react"
+import { Puzzle, Circle, BarChart3, LogOut, User } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import type { User as SupabaseUser } from "@supabase/supabase-js"
 
 type TabValue = "labirinto" | "elastico" | "estatisticas"
 
 export default function Home() {
   const [participants, setParticipants] = useState<Participant[]>([])
   const [activeTab, setActiveTab] = useState<TabValue>("labirinto")
+  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
+  const supabase = createClient()
 
   const labirintoParticipants = participants.filter((p) => p.activity === "labirinto")
   const elasticoParticipants = participants.filter((p) => p.activity === "elastico")
 
-  function addParticipant(participant: Participant) {
-    setParticipants((prev) => [...prev, participant])
+  // Carrega o usuário e os participantes
+  useEffect(() => {
+    async function loadData() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+
+      if (user) {
+        const { data, error } = await supabase
+          .from("participants")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("time", { ascending: true })
+
+        if (!error && data) {
+          setParticipants(
+            data.map((p) => ({
+              id: p.id,
+              name: p.name,
+              age: p.age,
+              time: Number(p.time),
+              activity: p.activity as "labirinto" | "elastico",
+              createdAt: new Date(p.created_at),
+            }))
+          )
+        }
+      }
+      setIsLoading(false)
+    }
+
+    loadData()
+  }, [supabase])
+
+  const addParticipant = useCallback(async (participant: Participant) => {
+    if (!user) return
+
+    const { data, error } = await supabase
+      .from("participants")
+      .insert({
+        user_id: user.id,
+        name: participant.name,
+        age: participant.age,
+        time: participant.time,
+        activity: participant.activity,
+      })
+      .select()
+      .single()
+
+    if (!error && data) {
+      setParticipants((prev) => [...prev, {
+        ...participant,
+        id: data.id,
+        createdAt: new Date(data.created_at),
+      }])
+    }
+  }, [user, supabase])
+
+  const removeParticipant = useCallback(async (id: string) => {
+    if (!user) return
+
+    const { error } = await supabase
+      .from("participants")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", user.id)
+
+    if (!error) {
+      setParticipants((prev) => prev.filter((p) => p.id !== id))
+    }
+  }, [user, supabase])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push("/auth/login")
+    router.refresh()
   }
 
-  function removeParticipant(id: string) {
-    setParticipants((prev) => prev.filter((p) => p.id !== id))
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -37,8 +124,26 @@ export default function Home() {
               <p className="text-xs text-muted-foreground">Registro de Atividades</p>
             </div>
           </div>
-          <div className="text-xs text-muted-foreground font-mono">
-            {participants.length} registros
+          <div className="flex items-center gap-3">
+            <div className="text-xs text-muted-foreground font-mono hidden sm:block">
+              {participants.length} registros
+            </div>
+            <div className="h-6 w-px bg-border hidden sm:block" />
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span className="hidden md:inline max-w-[150px] truncate">{user?.email}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="sr-only">Sair</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
