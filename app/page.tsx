@@ -1,26 +1,118 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { ActivityPanel } from "@/components/activity-panel"
 import { AgeStatistics } from "@/components/age-statistics"
 import type { Participant } from "@/lib/types"
-import { Puzzle, Circle, BarChart3 } from "lucide-react"
+import { Puzzle, Circle, BarChart3, LogOut, Loader2 } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 type TabValue = "labirinto" | "elastico" | "estatisticas"
 
 export default function Home() {
   const [participants, setParticipants] = useState<Participant[]>([])
   const [activeTab, setActiveTab] = useState<TabValue>("labirinto")
+  const [loading, setLoading] = useState(true)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const router = useRouter()
 
   const labirintoParticipants = participants.filter((p) => p.activity === "labirinto")
   const elasticoParticipants = participants.filter((p) => p.activity === "elastico")
 
-  function addParticipant(participant: Participant) {
-    setParticipants((prev) => [...prev, participant])
+  // Fetch participants and user info on load
+  useEffect(() => {
+    async function fetchData() {
+      const supabase = createClient()
+      
+      // Get user
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserEmail(user.email ?? null)
+      }
+
+      // Fetch participants
+      const { data, error } = await supabase
+        .from("participants")
+        .select("*")
+        .order("time", { ascending: true })
+
+      if (!error && data) {
+        setParticipants(
+          data.map((p) => ({
+            id: p.id,
+            name: p.name,
+            age: p.age,
+            time: Number(p.time),
+            activity: p.activity as "labirinto" | "elastico",
+            createdAt: new Date(p.created_at),
+          }))
+        )
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
+
+  async function addParticipant(participant: Participant) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) return
+
+    const { data, error } = await supabase
+      .from("participants")
+      .insert({
+        user_id: user.id,
+        name: participant.name,
+        age: participant.age,
+        time: participant.time,
+        activity: participant.activity,
+      })
+      .select()
+      .single()
+
+    if (!error && data) {
+      setParticipants((prev) => [...prev, {
+        id: data.id,
+        name: data.name,
+        age: data.age,
+        time: Number(data.time),
+        activity: data.activity as "labirinto" | "elastico",
+        createdAt: new Date(data.created_at),
+      }])
+    }
   }
 
-  function removeParticipant(id: string) {
-    setParticipants((prev) => prev.filter((p) => p.id !== id))
+  async function removeParticipant(id: string) {
+    const supabase = createClient()
+    
+    const { error } = await supabase
+      .from("participants")
+      .delete()
+      .eq("id", id)
+
+    if (!error) {
+      setParticipants((prev) => prev.filter((p) => p.id !== id))
+    }
+  }
+
+  async function handleLogout() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push("/auth/login")
+    router.refresh()
+  }
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -37,8 +129,24 @@ export default function Home() {
               <p className="text-xs text-muted-foreground">Registro de Atividades</p>
             </div>
           </div>
-          <div className="text-xs text-muted-foreground font-mono">
-            {participants.length} registros
+          <div className="flex items-center gap-4">
+            <div className="text-xs text-muted-foreground font-mono hidden sm:block">
+              {participants.length} registros
+            </div>
+            {userEmail && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground hidden md:block truncate max-w-[150px]">
+                  {userEmail}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Sair</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
