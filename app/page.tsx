@@ -155,11 +155,10 @@ export default function Home() {
           <button
             type="button"
             onClick={() => setActiveTab("labirinto")}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
-              activeTab === "labirinto"
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${activeTab === "labirinto"
                 ? "bg-primary text-primary-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
+              }`}
           >
             <Puzzle className="h-4 w-4" />
             <span className="hidden sm:inline">Labirinto</span>
@@ -167,11 +166,10 @@ export default function Home() {
           <button
             type="button"
             onClick={() => setActiveTab("elastico")}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
-              activeTab === "elastico"
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${activeTab === "elastico"
                 ? "bg-accent text-accent-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
+              }`}
           >
             <Circle className="h-4 w-4" />
             <span className="hidden sm:inline">Elastico</span>
@@ -179,11 +177,10 @@ export default function Home() {
           <button
             type="button"
             onClick={() => setActiveTab("estatisticas")}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
-              activeTab === "estatisticas"
+            className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors cursor-pointer ${activeTab === "estatisticas"
                 ? "bg-chart-3 text-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
+              }`}
           >
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Estatisticas</span>
