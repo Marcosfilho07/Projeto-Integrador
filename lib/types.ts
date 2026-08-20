@@ -20,16 +20,16 @@ export interface Participant {
   createdAt: Date
 }
 
-export type AgeGroup = "0-5" | "6-10" | "11-15" | "16-20" | "21-30" | "31-40" | "41+"
+export type AgeGroup = "0–9" | "10–19" | "20–29" | "30–39" | "40–49" | "50–59" | "60+"
 
 export function getAgeGroup(age: number): AgeGroup {
-  if (age <= 5) return "0-5"
-  if (age <= 10) return "6-10"
-  if (age <= 15) return "11-15"
-  if (age <= 20) return "16-20"
-  if (age <= 30) return "21-30"
-  if (age <= 40) return "31-40"
-  return "41+"
+  if (age <= 9) return "0–9"
+  if (age <= 19) return "10–19"
+  if (age <= 29) return "20–29"
+  if (age <= 39) return "30–39"
+  if (age <= 49) return "40–49"
+  if (age <= 59) return "50–59"
+  return "60+"
 }
 
 export function formatTime(seconds: number): string {
